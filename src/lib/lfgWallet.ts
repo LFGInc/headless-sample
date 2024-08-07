@@ -1,8 +1,10 @@
 import axios from "axios";
 import { instanceToPlain } from "class-transformer";
-import { Wallet, HDNodeWallet } from "ethers";
+import { } from "ethers";
+import { SigningKey, BaseWallet, Wallet } from "ethers";
 import stringify from "json-stringify-deterministic";
 import { v4 as uuidv4 } from 'uuid';
+import { LfgAxios } from "./axios";
 
 export enum Gateway {
   Int = 'https://proxy.dev-galachain-ops-api.rep.run/api/',
@@ -18,41 +20,51 @@ interface IRequest {
 }
 
 export class LfgWallet {
-  private _wallet: HDNodeWallet
+  private _wallet: BaseWallet
   private defaultGateway: string
 
-  constructor(w: HDNodeWallet) {
+  constructor(w: BaseWallet) {
     this._wallet = w
     this.defaultGateway = Gateway.Galaswap
   }
 
   static newRandom(): LfgWallet {
-    let randomWallet = Wallet.createRandom();
-    return new LfgWallet(randomWallet)
+    let w = Wallet.createRandom();
+    return new LfgWallet(w)
+  }
+
+  static newFromPrivateKey(privateKey: string): LfgWallet {
+    const k = new SigningKey(privateKey);
+    let w = new BaseWallet(k, null);
+    return new LfgWallet(w)
   }
 
   setDefaultGateway(gateway: Gateway) {
     this.defaultGateway = gateway
   }
 
-  userId(): string {
+  ethUserId(): string {
     return `eth|${this._wallet.address.replace('0x', '')}`
   }
 
+  normalUserId(): string {
+    return `client|${this._wallet.address.replace('0x', '')}`
+  }
+
   publicKey(): string {
-    return this._wallet.publicKey
+    return this._wallet.signingKey.publicKey
   }
 
   log() {
-    console.log("Private key:\n", this._wallet.privateKey);
-    console.log("Public key:\n", this._wallet.publicKey);
-    console.log("Address:\n", this._wallet.address);
+    console.log("Private key:", this._wallet.privateKey);
+    console.log("Public key:", this.publicKey());
+    console.log("Eth UserId:", this.ethUserId());
   }
 
   async registerHeadless() {
     try {
       const url = "https://api-galaswap.gala.com/v1/CreateHeadlessWallet"
-      const response = await axios.post(url, { publicKey: this._wallet.publicKey })
+      const response = await LfgAxios.post(url, { publicKey: this.publicKey() })
       return response.data
     } catch (e) {
       throw e
@@ -63,12 +75,17 @@ export class LfgWallet {
     const prefix = this.calculatePersonalSignPrefix(payload);
     const signerPublicKey = Buffer.from(this.publicKey().replace('0x', ''), 'hex').toString('base64');
     const uniqueKey = "galaswap-operation-" + uuidv4()
-    const prefixedPayload = { ...payload, prefix, uniqueKey, signerPublicKey };
+    const prefixedPayload = {
+      ...payload,
+      prefix,
+      uniqueKey,
+      //signerPublicKey
+    };
 
     const dto = this.getPayloadToSign(prefixedPayload);
 
     const sig = await this._wallet.signMessage(dto)
-    return { ...prefixedPayload }
+    return { ...prefixedPayload, sig }
   }
 
   async request(req: IRequest) {
@@ -76,8 +93,8 @@ export class LfgWallet {
       const url = (req.gateway ?? this.defaultGateway) + `${req.channel}/${req.contract}/${req.function}`
       const body = await this.sign(req.payload)
       const headers = {
-        "X-Wallet-Address": this.userId(),
-        "X-IDENTITY-LOOKUP-KEY": this.userId(),
+        "X-Wallet-Address": this.ethUserId(),
+        "X-IDENTITY-LOOKUP-KEY": this.ethUserId(),
       }
       console.log({ url, body, headers })
       const response = await axios.post(url, body, {
