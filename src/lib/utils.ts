@@ -1,6 +1,9 @@
 export async function debug(m: string, f: Promise<any>) {
-  const res = await f;
-  console.log("\n========================================\n");
-  console.log(m);
-  console.log(JSON.stringify(res, null, 2));
+  try {
+    const res = await f;
+    console.error(`[${m}] Success:`, JSON.stringify(res, null, 2));
+  } catch (e) {
+    console.error(`[${m}] Got an error:`, JSON.stringify(e, null, 2));
+  }
+  console.info("\n========================================\n");
 }

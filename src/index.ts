@@ -12,13 +12,31 @@ import { debug, Gateway, LfgWallet } from "./lib";
 // createNewWallet()
 
 async function main() {
-  const privateKey =
-    "0xceb48a42ca8e1d249ce047d3ef31f70411397f152551aa9d3349132114aa1a9a";
-  const lfgWallet = LfgWallet.newFromPrivateKey(privateKey);
+  const lfgWallet = LfgWallet.newRandom();
+
+  // const privateKey =
+  //   "0x230315a4a7639cc226b425bd01f4544ca305c77c0f0c8d07f6b1d135778cf862";
+  // const lfgWallet = LfgWallet.newFromPrivateKey(privateKey);
   lfgWallet.log();
 
+  console.info("\n========================================\n");
+
+  await debug("Register headless wallet", lfgWallet.registerHeadless());
+
   await debug(
-    "Get public key from Swap gateway:",
+    "Get public key from Swap gateway",
+    lfgWallet.request({
+      gateway: Gateway.Ext,
+      channel: "asset",
+      contract: "public-key-contract",
+      function: "GetMyProfile",
+      payload: {},
+      sign: true,
+    }),
+  );
+
+  await debug(
+    "Get public key from Swap gateway",
     lfgWallet.request({
       gateway: Gateway.Galaswap,
       channel: "asset",
@@ -28,7 +46,7 @@ async function main() {
     }),
   );
 
-  // await debug("Getpublickey from Int gateway:",
+  // await debug("Get public key from Int gateway",
   //   lfgWallet.request({
   //     gateway: Gateway.Int,
   //     channel: "asset",
@@ -37,16 +55,38 @@ async function main() {
   //     payload: { user: lfgWallet.ethUserId() }
   //   }));
 
-  await debug(
-    "Get balance from Swap gateway:",
-    lfgWallet.request({
-      gateway: Gateway.Galaswap,
-      channel: "asset",
-      contract: "token-contract",
-      function: "FetchBalances",
-      payload: { user: lfgWallet.ethUserId() },
-    }),
-  );
+  // await debug(
+  //   "Get balance from Swap gateway",
+  //   lfgWallet.request({
+  //     gateway: Gateway.Galaswap,
+  //     channel: "asset",
+  //     contract: "token-contract",
+  //     function: "FetchBalances",
+  //     payload: { user: lfgWallet.ethUserId() },
+  //   }),
+  // );
+
+  // await debug(
+  //   "Get public key from Ext gateway",
+  //   lfgWallet.request({
+  //     gateway: Gateway.Ext,
+  //     channel: "asset",
+  //     contract: "public-key-contract",
+  //     function: "GetPublicKey",
+  //     payload: { user: lfgWallet.ethUserId() },
+  //   }),
+  // );
+
+  // await debug(
+  //   "Register Eth user with Ext gateway",
+  //   lfgWallet.request({
+  //     gateway: Gateway.Ext,
+  //     channel: "asset",
+  //     contract: "public-key-contract",
+  //     function: "RegisterEthUser",
+  //     payload: { publicKey: lfgWallet.publicKey() },
+  //   }),
+  // );
 }
 
 main();

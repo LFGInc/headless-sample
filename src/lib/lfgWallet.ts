@@ -1,13 +1,16 @@
-import axios from "axios";
 import { instanceToPlain } from "class-transformer";
-import {} from "ethers";
 import { SigningKey, BaseWallet, Wallet } from "ethers";
 import stringify from "json-stringify-deterministic";
 import { v4 as uuidv4 } from "uuid";
 import { LfgAxios } from "./axios";
 
 export enum Gateway {
+  // Gala internal gateway, using reverse proxy to expose it external network
+  // Origin gateway: https://int-operation-api-chain-platform-stage-chain-platform-eks.stage.galachain.com
   Int = "https://proxy.dev-galachain-ops-api.rep.run/api/",
+  // Gala external gateway
+  Ext = "https://galachain-gateway-chain-platform-stage-chain-platform-eks.stage.galachain.com/api/",
+  // Gala swap gateway
   Galaswap = "https://api-galaswap.gala.com/galachain/api/",
 }
 
@@ -17,6 +20,7 @@ interface IRequest {
   contract: string;
   function: string;
   payload: object;
+  sign?: boolean;
 }
 
 export class LfgWallet {
@@ -67,7 +71,7 @@ export class LfgWallet {
       const response = await LfgAxios.post(url, {
         publicKey: this.publicKey(),
       });
-      return response.data;
+      return response;
     } catch (e) {
       throw e;
     }
@@ -75,22 +79,22 @@ export class LfgWallet {
 
   async sign(payload: object): Promise<object> {
     const prefix = this.calculatePersonalSignPrefix(payload);
-    const signerPublicKey = Buffer.from(
-      this.publicKey().replace("0x", ""),
-      "hex",
-    ).toString("base64");
-    const uniqueKey = "galaswap-operation-" + uuidv4();
+    // const signerPublicKey = Buffer.from(
+    //   this.publicKey().replace("0x", ""),
+    //   "hex",
+    // ).toString("base64");
+    // const uniqueKey = "galaswap-operation-" + uuidv4();
     const prefixedPayload = {
       ...payload,
       prefix,
-      uniqueKey,
-      //signerPublicKey
+      // uniqueKey,
+      // signerPublicKey,
     };
 
     const dto = this.getPayloadToSign(prefixedPayload);
 
-    const sig = await this._wallet.signMessage(dto);
-    return { ...prefixedPayload, sig };
+    const signature = await this._wallet.signMessage(dto);
+    return { ...prefixedPayload, signature };
   }
 
   async request(req: IRequest) {
@@ -98,23 +102,22 @@ export class LfgWallet {
       const url =
         (req.gateway ?? this.defaultGateway) +
         `${req.channel}/${req.contract}/${req.function}`;
-      const body = await this.sign(req.payload);
+      let body = req.payload;
+      if (req.sign === true) {
+        body = await this.sign(req.payload);
+      }
       const headers = {
-        "X-Wallet-Address": this.ethUserId(),
-        "X-IDENTITY-LOOKUP-KEY": this.ethUserId(),
+        // "X-Wallet-Address": this.ethUserId(),
+        // "X-IDENTITY-LOOKUP-KEY": this.ethUserId(),
       };
       console.log({ url, body, headers });
-      const response = await axios.post(url, body, {
+      const response = await LfgAxios.post(url, body, {
         headers,
       });
 
-      return response.data;
+      return response;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return error?.response?.data;
-      } else {
-        throw new Error("Got a different error than axios");
-      }
+      throw error;
     }
   }
 
