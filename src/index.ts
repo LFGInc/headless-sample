@@ -15,7 +15,7 @@ async function main() {
   const lfgWallet = LfgWallet.newRandom();
 
   // const privateKey =
-  //   "0x230315a4a7639cc226b425bd01f4544ca305c77c0f0c8d07f6b1d135778cf862";
+  //   "0xe02a9d0bcf0d14ab1b254d62c199768e812c5cb98c01e879089993ea67fcb6c2";
   // const lfgWallet = LfgWallet.newFromPrivateKey(privateKey);
   lfgWallet.log();
 
@@ -24,9 +24,9 @@ async function main() {
   await debug("Register headless wallet", lfgWallet.registerHeadless());
 
   await debug(
-    "Get public key from Swap gateway",
+    "Get public key from Ext gateway",
     lfgWallet.request({
-      gateway: Gateway.Ext,
+      gateway: Gateway.ExtHeadless,
       channel: "asset",
       contract: "public-key-contract",
       function: "GetMyProfile",
@@ -35,58 +35,70 @@ async function main() {
     }),
   );
 
+  await debug("Register lfg", lfgWallet.registerLfg());
   await debug(
-    "Get public key from Swap gateway",
+    "Get public key from Ext gateway",
     lfgWallet.request({
-      gateway: Gateway.Galaswap,
-      channel: "asset",
+      gateway: Gateway.ExtHeadless,
+      channel: "lfg",
       contract: "public-key-contract",
-      function: "GetPublicKey",
-      payload: { user: lfgWallet.ethUserId() },
+      function: "GetMyProfile",
+      payload: {},
+      sign: true,
     }),
   );
-
-  // await debug("Get public key from Int gateway",
-  //   lfgWallet.request({
-  //     gateway: Gateway.Int,
-  //     channel: "asset",
-  //     contract: "public-key-contract",
-  //     function: "GetPublicKey",
-  //     payload: { user: lfgWallet.ethUserId() }
-  //   }));
-
-  // await debug(
-  //   "Get balance from Swap gateway",
-  //   lfgWallet.request({
-  //     gateway: Gateway.Galaswap,
-  //     channel: "asset",
-  //     contract: "token-contract",
-  //     function: "FetchBalances",
-  //     payload: { user: lfgWallet.ethUserId() },
-  //   }),
-  // );
 
   // await debug(
   //   "Get public key from Ext gateway",
   //   lfgWallet.request({
-  //     gateway: Gateway.Ext,
-  //     channel: "asset",
+  //     gateway: Gateway.ExtHeadless,
+  //     channel: "lfg",
   //     contract: "public-key-contract",
   //     function: "GetPublicKey",
-  //     payload: { user: lfgWallet.ethUserId() },
+  //     payload: { user: lfgWallet.normalUserId() },
+  //   }),
+  // );
+  //
+  // await debug(
+  //   "Get balane from Ext gateway",
+  //   lfgWallet.request({
+  //     gateway: Gateway.ExtHeadless,
+  //     channel: "asset",
+  //     contract: "token-contract",
+  //     function: "FetchBalances",
+  //     payload: { owner: lfgWallet.ethUserId() },
+  //   }),
+  // );
+  //
+  // await debug(
+  //   "Get public key from Ext gateway",
+  //   lfgWallet.request({
+  //     gateway: Gateway.ExtHeadless,
+  //     channel: "lfg",
+  //     contract: "public-key-contract",
+  //     function: "GetMyProfile",
+  //     payload: {},
+  //     sign: true,
   //   }),
   // );
 
-  // await debug(
-  //   "Register Eth user with Ext gateway",
-  //   lfgWallet.request({
-  //     gateway: Gateway.Ext,
-  //     channel: "asset",
-  //     contract: "public-key-contract",
-  //     function: "RegisterEthUser",
-  //     payload: { publicKey: lfgWallet.publicKey() },
-  //   }),
-  // );
+  await debug(
+    "Get public key from Ext gateway",
+    lfgWallet.request({
+      gateway: Gateway.ExtHeadless,
+      channel: "lfg",
+      contract: "lfg-contract",
+      function: "ProjectCreate",
+      payload: {
+        "distribution": "QmWn8aQhwUFefPqBdm4W3s2ceve2CJ6MZMyqDnzeHLBCFt",
+        "name": "Tinguyen 03",
+        "description": "No description. Test only",
+        "image": "https://ipfs-ops-api.rep.run/ipfs/QmeGMLDnK4USHuyPPYYTWXfVry8tj3gSaFY8PyMhZyv1pD",
+        "version": "0.0.1"
+      },
+      sign: true,
+    }),
+  );
 }
 
 main();

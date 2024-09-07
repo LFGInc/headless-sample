@@ -1,7 +1,7 @@
 import { instanceToPlain } from "class-transformer";
 import { SigningKey, BaseWallet, Wallet } from "ethers";
 import stringify from "json-stringify-deterministic";
-import { v4 as uuidv4 } from "uuid";
+// import { v4 as uuidv4 } from "uuid";
 import { LfgAxios } from "./axios";
 
 export enum Gateway {
@@ -9,9 +9,9 @@ export enum Gateway {
   // Origin gateway: https://int-operation-api-chain-platform-stage-chain-platform-eks.stage.galachain.com
   Int = "https://proxy.dev-galachain-ops-api.rep.run/api/",
   // Gala external gateway
-  Ext = "https://galachain-gateway-chain-platform-stage-chain-platform-eks.stage.galachain.com/api/",
+  ExtHeadless = "https://galachain-gateway-chain-platform-stage-chain-platform-eks.stage.galachain.com/api/",
   // Gala swap gateway
-  Galaswap = "https://api-galaswap.gala.com/galachain/api/",
+  Galaswap = "https://proxy.dev-galaswqp-ops-api.lfg.inc/galachain/api/",
 }
 
 interface IRequest {
@@ -67,7 +67,8 @@ export class LfgWallet {
 
   async registerHeadless() {
     try {
-      const url = "https://api-galaswap.gala.com/v1/CreateHeadlessWallet";
+      const url =
+        "https://proxy.dev-galaswap-ops-api.lfg.inc/v1/CreateHeadlessWallet";
       const response = await LfgAxios.post(url, {
         publicKey: this.publicKey(),
       });
@@ -76,6 +77,21 @@ export class LfgWallet {
       throw e;
     }
   }
+
+  async registerLfg() {
+    try {
+      const url =
+        "https://dev-nodesystem-api.lfg.inc/api/v1/auth/sign-up";
+      const response = await LfgAxios.post(url, {
+        username: this.normalUserId(),
+        publicKey: this.publicKey(),
+      });
+      return response;
+    } catch (e) {
+      throw e;
+    }
+  }
+
 
   async sign(payload: object): Promise<object> {
     const prefix = this.calculatePersonalSignPrefix(payload);
