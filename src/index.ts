@@ -21,20 +21,6 @@ async function main() {
 
   console.info("\n========================================\n");
 
-  await debug("Register headless wallet", lfgWallet.registerHeadless());
-
-  await debug(
-    "Get public key from Ext gateway",
-    lfgWallet.request({
-      gateway: Gateway.ExtHeadless,
-      channel: "asset",
-      contract: "public-key-contract",
-      function: "GetMyProfile",
-      payload: {},
-      sign: true,
-    }),
-  );
-
   await debug("Register lfg", lfgWallet.registerLfg());
   await debug(
     "Get public key from Ext gateway",
@@ -47,6 +33,20 @@ async function main() {
       sign: true,
     }),
   );
+
+  await debug("Register headless wallet", lfgWallet.registerHeadless());
+  await debug(
+    "Get public key from Ext gateway",
+    lfgWallet.request({
+      gateway: Gateway.ExtHeadless,
+      channel: "asset",
+      contract: "public-key-contract",
+      function: "GetMyProfile",
+      payload: {},
+      sign: true,
+    }),
+  );
+
 
   // await debug(
   //   "Get public key from Ext gateway",
