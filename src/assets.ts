@@ -1,11 +1,5 @@
 import { ethers } from "ethers";
-import { Gateway, LfgWallet } from "./lib";
-const privateKey = process.env.PRIVATE_KEY;
-if (!privateKey) {
-  throw new Error("PRIVATE_KEY is not set");
-}
-const lfgWallet = LfgWallet.newFromPrivateKey(privateKey);
-lfgWallet.log();
+import { Gateway } from "./lib";
 
 export enum AllowanceType {
   Use = 0,
