@@ -7,15 +7,15 @@ import { LfgAxios } from "./axios";
 export enum Gateway {
   // Gala internal gateway, using reverse proxy to expose it external network
   // Origin gateway: https://int-operation-api-chain-platform-stage-chain-platform-eks.stage.galachain.com
-  Int = "https://proxy.dev-galachain-ops-api.rep.run/api/",
+  Int = "https://proxy.dev-galachain-ops-api.rep.run/api",
   // Gala external gateway
-  ExtHeadless = "https://galachain-gateway-chain-platform-stage-chain-platform-eks.stage.galachain.com/api/",
+  ExtHeadless = "https://galachain-gateway-chain-platform-stage-chain-platform-eks.stage.galachain.com/api",
   // Gala swap gateway
-  Galaswap = "https://proxy.dev-galaswqp-ops-api.lfg.inc/galachain/api/",
+  Galaswap = "https://proxy.dev-galaswqp-ops-api.lfg.inc/galachain/api",
 }
 
 interface IRequest {
-  gateway?: Gateway;
+  gateway?: Gateway | string;
   channel: string;
   contract: string;
   function: string;
@@ -51,6 +51,10 @@ export class LfgWallet {
     return `eth|${this._wallet.address.replace("0x", "")}`;
   }
 
+  ethAddress(): string {
+    return this._wallet.address;
+  }
+
   normalUserId(): string {
     return `client|${this._wallet.address.replace("0x", "")}`;
   }
@@ -63,14 +67,20 @@ export class LfgWallet {
     console.log("Private key:", this._wallet.privateKey);
     console.log("Public key:", this.publicKey());
     console.log("Eth UserId:", this.ethUserId());
+    console.log("Normal UserId:", this.normalUserId());
   }
 
   async registerHeadless() {
     try {
       const url =
         "https://proxy.dev-galaswap-ops-api.lfg.inc/v1/CreateHeadlessWallet";
+
+      const publicKey = this.publicKey();
+
+      console.log("publicKey", publicKey);
+
       const response = await LfgAxios.post(url, {
-        publicKey: this.publicKey(),
+        publicKey,
       });
       return response;
     } catch (e) {
@@ -80,8 +90,7 @@ export class LfgWallet {
 
   async registerLfg() {
     try {
-      const url =
-        "https://dev-nodesystem-api.lfg.inc/api/v1/auth/sign-up";
+      const url = "https://dev-nodesystem-api.lfg.inc/api/v1/auth/sign-up";
       const response = await LfgAxios.post(url, {
         username: this.normalUserId(),
         publicKey: this.publicKey(),
@@ -91,7 +100,6 @@ export class LfgWallet {
       throw e;
     }
   }
-
 
   async sign(payload: object): Promise<object> {
     const prefix = this.calculatePersonalSignPrefix(payload);
@@ -117,16 +125,16 @@ export class LfgWallet {
     try {
       const url =
         (req.gateway ?? this.defaultGateway) +
-        `${req.channel}/${req.contract}/${req.function}`;
+        `/${req.channel}/${req.contract}/${req.function}`;
       let body = req.payload;
       if (req.sign === true) {
         body = await this.sign(req.payload);
       }
       const headers = {
+        "Content-Type": "application/json",
         // "X-Wallet-Address": this.ethUserId(),
         // "X-IDENTITY-LOOKUP-KEY": this.ethUserId(),
       };
-      console.log({ url, body, headers });
       const response = await LfgAxios.post(url, body, {
         headers,
       });

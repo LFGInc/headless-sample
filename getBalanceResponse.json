@@ -1,0 +1,16 @@
+{
+  "Status": 1,
+  "Data": [
+    {
+      "additionalKey": "none",
+      "category": "Unit",
+      "collection": "GALA",
+      "inUseHolds": [],
+      "instanceIds": [],
+      "lockedHolds": [],
+      "owner": "eth|8B73C6c3F60ac6F45bb6A7D2A0080AF829c76e43",
+      "quantity": "9947168",
+      "type": "none"
+    }
+  ]
+}
