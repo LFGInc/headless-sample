@@ -63,6 +63,10 @@ export class LfgWallet {
     return this._wallet.signingKey.publicKey;
   }
 
+  compressedPublicKey(): string {
+    return this._wallet.signingKey.compressedPublicKey;
+  }
+
   log() {
     console.log("Private key:", this._wallet.privateKey);
     console.log("Public key:", this.publicKey());

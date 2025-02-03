@@ -38,13 +38,14 @@ describe("deploy-token", () => {
   const tokenClass: TokenInstance = {
     category: "WalletToken",
     collection: "LFG",
-    type: "baseToken",
+    type: "baseNFT",
     additionalKey: "none",
   };
 
   const newToken = {
     ...baseTokenConfig,
     tokenClass: tokenClass,
+    isNonFungible: true,
   };
 
   test(
@@ -107,7 +108,7 @@ describe("deploy-token", () => {
       const payload = {
         uniqueKey: new Date().getTime().toString(),
         owner: lfgWallet.ethUserId(),
-        quantity: "70000",
+        quantity: "12",
         tokenClass: tokenClass,
       };
 
